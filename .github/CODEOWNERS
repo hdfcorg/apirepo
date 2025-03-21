@@ -1,2 +1,4 @@
-* @hdfcrepo/teamahdfc @hdfcrepo/teambsidgs
+
+# Define team leads for review
+develop @teamahdfc/lead @teambsidgs/lead
 
