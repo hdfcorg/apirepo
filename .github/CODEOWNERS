@@ -1,2 +1,8 @@
-* @hdfcrepo/teamahdfc @hdfcrepo/teambsidgs
+# * @hdfcrepo/teamahdfc @hdfcrepo/teambsidgs
+# Team A HDFC Leads
+/feature/*  @teamahdfc_lead1 @teamahdfc_lead2
+
+# Team B SIDGS Leads
+/feature/*  @teambsidgs_lead1 @teambsidgs_lead2
+
 
