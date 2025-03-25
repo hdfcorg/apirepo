@@ -1,0 +1,66 @@
+name: Enforce Team-Based Approvals
+
+on:
+  pull_request:
+    branches:
+      - develop
+    types: [submitted]
+
+jobs:
+  check-approvals:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get PR Approvals
+        id: approvals
+        run: |
+          PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+          REVIEWS=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+                     -H "Accept: application/vnd.github.v3+json" \
+                     "https://api.github.com/repos/orgname/repo/pulls/$PR_NUMBER/reviews")
+          echo "$REVIEWS" > reviews.json
+      
+      - name: Validate Approvers from Different Teams
+        id: validate_teams
+        run: |
+          ORGANIZATION="orgname"
+          TEAM_A="teama"
+          TEAM_B="teamb"
+
+          TEAM_A_APPROVED=0
+          TEAM_B_APPROVED=0
+
+          # Fetch members of Team A
+          TEAM_A_MEMBERS=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+                                  -H "Accept: application/vnd.github.v3+json" \
+                                  "https://api.github.com/orgs/$ORGANIZATION/teams/$TEAM_A/members" \
+                            | jq -r '.[].login')
+
+          # Fetch members of Team B
+          TEAM_B_MEMBERS=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+                                  -H "Accept: application/vnd.github.v3+json" \
+                                  "https://api.github.com/orgs/$ORGANIZATION/teams/$TEAM_B/members" \
+                            | jq -r '.[].login')
+
+          # Check which users have approved
+          for USER in $(jq -r '.[] | select(.state=="APPROVED") | .user.login' reviews.json); do
+            if echo "$TEAM_A_MEMBERS" | grep -qw "$USER"; then
+              TEAM_A_APPROVED=1
+            fi
+            if echo "$TEAM_B_MEMBERS" | grep -qw "$USER"; then
+              TEAM_B_APPROVED=1
+            fi
+          done
+
+          # Enforce rule: one approval from each team is required
+          if [[ $TEAM_A_APPROVED -eq 0 || $TEAM_B_APPROVED -eq 0 ]]; then
+            echo "❌ Error: Must have one approval from each team!"
+            exit 1
+          else
+            echo "✅ Approvals from both teams are verified."
+          fi
+
+      - name: Block Merge if Conditions Fail
+        if: failure()
+        run: |
+          echo "❌ Merge is blocked. Approvals from both teams are required."
+          exit 1
