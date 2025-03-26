@@ -4,9 +4,7 @@ on:
   pull_request:
     branches:
       - develop  # This workflow applies only for PRs merging into develop
-    types: [submitted]
-  # Uncomment workflow_dispatch to allow manual triggering for testing:
-  # workflow_dispatch:
+    types: [review_requested, submitted, edited, opened]
 
 jobs:
   check-approvals:
@@ -77,3 +75,14 @@ jobs:
         run: |
           echo "❌ Merge is blocked. Approvals from both teams are required."
           exit 1
+
+  request_reviewers:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Request Reviewers
+        run: |
+          PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+          curl -X POST -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+               -H "Accept: application/vnd.github.v3+json" \
+               "https://api.github.com/repos/hdfcorg/hdfc/pulls/$PR_NUMBER/requested_reviewers" \
+               -d '{"team_reviewers": ["teamahdfc", "teambsidgs"]}'
