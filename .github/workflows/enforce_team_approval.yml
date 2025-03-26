@@ -21,8 +21,15 @@ jobs:
           REVIEWS=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
                      -H "Accept: application/vnd.github.v3+json" \
                      "https://api.github.com/repos/hdfcorg/apirepo/pulls/$PR_NUMBER/reviews")
+          
+          if [[ -z "$REVIEWS" || "$REVIEWS" == "[]" ]]; then
+            echo "❌ No approvals found yet. Merge is blocked until at least one review is submitted."
+            exit 1
+          fi
+          
           echo "$REVIEWS" > reviews.json
           echo "✅ PR Reviews Fetched Successfully."
+
 
       - name: Debug PR Approvals
         run: cat reviews.json  # Print reviews for debugging
