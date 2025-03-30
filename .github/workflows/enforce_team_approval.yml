@@ -4,7 +4,7 @@ on:
   pull_request:
     branches:
       - develop  # This workflow applies only to PRs targeting develop
-    types: [opened, synchronize, reopened, review_requested, submitted, edited]
+    types: [review_requested, submitted]
 
 jobs:
   check-approvals:
