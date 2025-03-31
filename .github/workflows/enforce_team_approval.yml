@@ -27,7 +27,8 @@ jobs:
             exit 1
           fi
           
-          echo "$REVIEWS" > reviews.json
+          # echo "$REVIEWS" > reviews.json
+          echo "$REVIEWS" | tee reviews.json
           echo "✅ PR Reviews Fetched Successfully."
 
 
