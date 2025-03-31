@@ -32,7 +32,8 @@ jobs:
 
 
       - name: Debug PR Approvals
-        run: cat reviews.json  # Print reviews for debugging
+        run: ls -la && cat reviews.json   # Print reviews for debugging
+        
 
       - name: Validate Approvers from Different Teams
         id: validate_teams
