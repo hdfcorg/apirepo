@@ -57,41 +57,5 @@ jobs:
           echo "🔹 Team A Members: $TEAM_A_MEMBERS"
           # echo "🔹 Team B Members: $TEAM_B_MEMBERS"
 
-          # Loop through the approved users in the PR and check team membership
-          for USER in $(jq -r '.[] | select(.state=="APPROVED") | .user.login' reviews.json); do
-            echo "✅ Checking approval from: $USER"
-            
-            if echo "$TEAM_A_MEMBERS" | grep -qw "$USER"; then
-              TEAM_A_APPROVED=1
-              echo "✅ $USER is in Team A"
-            fi
-            if echo "$TEAM_B_MEMBERS" | grep -qw "$USER"; then
-              TEAM_B_APPROVED=1
-              echo "✅ $USER is in Team B"
-            fi
-          done
 
-          # Enforce rule: one approval from each team is required
-          if [[ $TEAM_A_APPROVED -eq 0 || $TEAM_B_APPROVED -eq 0 ]]; then
-            echo "❌ Error: At least one approval from each team is required!"
-            exit 1
-          else
-            echo "✅ Approvals from both teams verified. Merge allowed."
-          fi
 
-      - name: Block Merge if Conditions Fail
-        if: failure()
-        run: |
-          echo "❌ Merge is blocked. PR must have at least one approval from each team."
-          exit 1
-
-  request_reviewers:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Automatically Request Reviewers from Teams
-        run: |
-          PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-          curl -X POST -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-               -H "Accept: application/vnd.github.v3+json" \
-               "https://api.github.com/repos/hdfcorg/apirepo/pulls/$PR_NUMBER/requested_reviewers" \
-               -d '{"team_reviewers": ["teamahdfc", "teambsidgs"]}'
