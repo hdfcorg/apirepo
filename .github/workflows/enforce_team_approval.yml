@@ -22,16 +22,17 @@ jobs:
         echo "Team B: $Team_B"
         echo "TEAM_A=$Team_A" >> $GITHUB_ENV
         echo "TEAM_B=$Team_B" >> $GITHUB_ENV
-    - name: Fetch Team A Members
-      run: |
-        echo "Fetching Team A Members"
-        TEAM_A_MEMBERS=$(curl -s -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" -H "Accept: application/vnd.github.v3+json" "https://api.github.com/orgs/hdfcorg/teams/$TEAM_A/members")
-        echo "Response for Team A Members:"
-        echo "$TEAM_A_MEMBERS"
-        
     - name: Fetch Team B Members
       run: |
         echo "Fetching Team B Members"
         TEAM_B_MEMBERS=$(curl -s -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" -H "Accept: application/vnd.github.v3+json" "https://api.github.com/orgs/hdfcorg/teams/$TEAM_B/members")
         echo "Response for Team B Members:"
-        echo "$TEAM_B_MEMBERS" | jq '.[] | {login, id}'
+        echo "$TEAM_B_MEMBERS"
+        
+        # Only try to parse with jq if it looks like a JSON array
+        if [[ "$TEAM_B_MEMBERS" == \[* ]]; then
+          echo "Parsing team members data:"
+          echo "$TEAM_B_MEMBERS" | jq '.[] | {login, id}'
+        else
+          echo "API response is not a JSON array. Check the team name and token permissions."
+        fi
