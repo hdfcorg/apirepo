@@ -6,6 +6,10 @@ on:
       - develop  # Trigger for PRs targeting the 'develop' branch
     types: [opened]  # Trigger only when the PR is opened
 
+permissions:
+  contents: read
+  organization-members: read  # Required for team member access    
+
 jobs:
   fetch_team_members:
     runs-on: ubuntu-latest
