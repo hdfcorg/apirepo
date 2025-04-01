@@ -10,7 +10,7 @@ permissions:
   contents: read
   # CORRECT PERMISSIONS FOR TEAM ACCESS
   pull-requests: read
-  members: read  # Required for organization member data    
+  # members: read  # Required for organization member data    
 
 jobs:
   fetch_team_members:
