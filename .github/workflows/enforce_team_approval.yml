@@ -25,9 +25,16 @@ jobs:
     - name: Fetch Team A Members
       run: |
         echo "Fetching Team A Members"
-        curl -s -H "Authorization: Bearer ${MY_TOKEN}" -H "Accept: application/vnd.github.v3+json" "https://api.github.com/orgs/hdfcorg/teams/$Team_A/members" 
+        response=$(curl -s -H "Authorization: Bearer ${MY_TOKEN}" -H "Accept: application/vnd.github.v3+json" "https://api.github.com/orgs/hdfcorg/teams/$Team_A/members")
+        
+        if [ $? -ne 0 ]; then
+          echo "Error fetching members for Team A"
+          exit 1
+        fi
+
         echo "Response: $response"  # Log the response for debugging
-        echo $response | jq '.[].login'  # Try to extract the login field
+        echo $response | jq '.[].login'  # Extract the login field from the response
+
 
     - name: Fetch Team B Members
       run: |
