@@ -3,8 +3,8 @@ name: Fetch Team Members on PR Submission
 on:
   pull_request:
     branches:
-      - develop  # Only trigger for PRs targeting the develop branch
-    types: [opened]  # Trigger only when a PR is opened
+      - develop  # Trigger for PRs targeting the 'develop' branch
+    types: [opened]  # Trigger only when the PR is opened
 
 jobs:
   fetch_team_members:
@@ -25,45 +25,11 @@ jobs:
     - name: Fetch Team A Members
       run: |
         echo "Fetching Team A Members"
-        response=$(curl -s -H "Authorization: Bearer ${MY_TOKEN}" -H "Accept: application/vnd.github.v3+json" "https://api.github.com/orgs/hdfcorg/teams/$Team_A/members")
-        
-        # Check if the curl command was successful
-        if [ $? -ne 0 ]; then
-          echo "Error fetching members for Team A"
-          exit 1
-        fi
-
-        # Log the full response to see its structure
-        echo "Response: $response"  # This will help us inspect what is returned
-
-        # Check if the response contains an error message (e.g., "Not Found")
-        if echo "$response" | jq -e '.message' > /dev/null; then
-          echo "Error: $response"  # Log the error response from GitHub API
-          exit 1
-        fi
-
-        # If the response is valid, proceed with extracting member logins
-        echo "$response" | jq '.[].login'  # Extract the login field for each member
+        response_a=$(curl -s -H "Authorization: Bearer ${{ secrets.MY_TOKEN }}" -H "Accept: application/vnd.github.v3+json" "https://api.github.com/orgs/hdfcorg/teams/$Team_A/members")
+        echo "Team A Members: $response_a"
 
     - name: Fetch Team B Members
       run: |
         echo "Fetching Team B Members"
-        response=$(curl -s -H "Authorization: Bearer ${MY_TOKEN}" -H "Accept: application/vnd.github.v3+json" "https://api.github.com/orgs/hdfcorg/teams/$Team_B/members")
-
-        # Check if the curl command was successful
-        if [ $? -ne 0 ]; then
-          echo "Error fetching members for Team B"
-          exit 1
-        fi
-
-        # Log the full response to see its structure
-        echo "Response: $response"  # This will help us inspect what is returned
-
-        # Check if the response contains an error message (e.g., "Not Found")
-        if echo "$response" | jq -e '.message' > /dev/null; then
-          echo "Error: $response"  # Log the error response from GitHub API
-          exit 1
-        fi
-
-        # If the response is valid, proceed with extracting member logins
-        echo "$response" | jq '.[].login'  # Extract the login field for each member
+        response_b=$(curl -s -H "Authorization: Bearer ${{ secrets.MY_TOKEN }}" -H "Accept: application/vnd.github.v3+json" "https://api.github.com/orgs/hdfcorg/teams/$Team_B/members")
+        echo "Team B Members: $response_b"
