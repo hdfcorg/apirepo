@@ -20,7 +20,7 @@ jobs:
 
     - name: Define and use Team Names in one step
       run: |
-        Team_Members=("teamahdfc" "teambsidgs")
+        Team_Members=("12565268" "12565289")
         Team_A="${Team_Members[0]}"
         Team_B="${Team_Members[1]}"
         echo "Team A: $Team_A"
