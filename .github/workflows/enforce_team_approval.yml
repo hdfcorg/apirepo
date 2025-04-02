@@ -88,6 +88,7 @@ jobs:
         echo "Fetching PR Reviewers"
         
         PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+        echo "PR_NUMBER: $PR_NUMBER
         REPO=${{ github.repository }}
 
         REVIEWERS=$(curl -s -H "Authorization: Bearer ${{ secrets.MY_TOKEN }}" \
@@ -95,6 +96,10 @@ jobs:
           "https://api.github.com/repos/$REPO/pulls/$PR_NUMBER/reviews" | jq -r '.[].user.login')
 
         echo "PR Reviewers: $REVIEWERS"
+        if [ -z "$REVIEWERS" ]; then
+          echo "No reviewers found for this PR."
+          exit 1
+        fi
 
         # Validate PR approval
         APPROVED=false
@@ -113,10 +118,7 @@ jobs:
           exit 1
         fi
 
-    - name: Proceed if PR Approved
-      if: env.PR_APPROVED == 'true'
-      run: |
-        echo "Running next job as PR has been approved by required members."
+    
       
        
 
