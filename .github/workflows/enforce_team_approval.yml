@@ -33,7 +33,7 @@ jobs:
         echo "Team B: $Team_B"
         echo "TEAM_A=$Team_A" >> $GITHUB_ENV
         echo "TEAM_B=$Team_B" >> $GITHUB_ENV
-        REPO=apirepo
+        
         
 
     - name: Fetch Team A Members
