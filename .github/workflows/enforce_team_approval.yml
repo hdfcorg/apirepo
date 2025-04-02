@@ -1,18 +1,23 @@
 name: Fetch Team Members on PR Submission
+
 on:
   pull_request:
     branches:
       - develop  # Trigger for PRs targeting the 'develop' branch
     types: [opened]  # Trigger only when the PR is opened
+
 permissions:
   contents: read
   pull-requests: read
+
 jobs:
   fetch_team_members:
     runs-on: ubuntu-latest
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
+
     - name: Define and use Team Names in one step
       run: |
         Team_Members=("teamahdfc" "teambsidgs")
@@ -22,15 +27,21 @@ jobs:
         echo "Team B: $Team_B"
         echo "TEAM_A=$Team_A" >> $GITHUB_ENV
         echo "TEAM_B=$Team_B" >> $GITHUB_ENV
+
     - name: Fetch Team B Members
       run: |
         echo "Fetching Team B Members"
         TEAM_B="your-team-id"  # Make sure this is set to the correct Team ID
+        
+        # API call to get team members
         TEAM_B_MEMBERS=$(curl -s -H "Authorization: Bearer ${{ secrets.MY_TOKEN }}" -H "Accept: application/vnd.github.v3+json" "https://api.github.com/orgs/hdfcorg/teams/$TEAM_B/members")
-        sudo apt-get install jq
-        # Optional: Parsing the JSON response to extract specific details, like the login names of the members
+        
+        # Install jq for JSON parsing
+        sudo apt-get update && sudo apt-get install -y jq
+
+        # Parse and display team members
         echo "Response for Team B Members:"
-        echo "$TEAM_B_MEMBERS" | jq '.[] | {id, slug}'  # This will extract the login names of the team members
-          
-         # If you just want to output the whole response, uncomment the next line:
-        echo "$TEAM_B_MEMBERS"
+        echo "$TEAM_B_MEMBERS" | jq '.[] | {id, slug, login, url}'  # This will extract the ID, login names, and URLs of the team members
+        
+        # Optionally, output the whole response (uncomment the next line if needed):
+        # echo "$TEAM_B_MEMBERS"
