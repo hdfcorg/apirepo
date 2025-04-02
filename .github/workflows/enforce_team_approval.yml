@@ -33,6 +33,8 @@ jobs:
         echo "Team B: $Team_B"
         echo "TEAM_A=$Team_A" >> $GITHUB_ENV
         echo "TEAM_B=$Team_B" >> $GITHUB_ENV
+        REPO=apirepo
+        
 
     - name: Fetch Team A Members
       run: |
@@ -81,7 +83,20 @@ jobs:
           echo "Error: API did not return a valid JSON array"
           exit 1
         fi    
+    - name: Fetch PR Reviewers
+      run: |
+        echo "Fetching PR Reviewers"
         
+        PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+        REPO=${{ github.repository }}
+
+        REVIEWERS=$(curl -s -H "Authorization: Bearer ${{ secrets.MY_TOKEN }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/$REPO/pulls/$PR_NUMBER/reviews" | jq -r '.[].user.login')
+
+        echo "PR Reviewers: $REVIEWERS"
+    
+      
        
 
         
