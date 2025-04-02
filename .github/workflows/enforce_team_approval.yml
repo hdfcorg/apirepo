@@ -95,7 +95,28 @@ jobs:
           "https://api.github.com/repos/$REPO/pulls/$PR_NUMBER/reviews" | jq -r '.[].user.login')
 
         echo "PR Reviewers: $REVIEWERS"
-    
+
+        # Validate PR approval
+        APPROVED=false
+        for reviewer in $REVIEWERS; do
+          if [[ " ${TEAM_A_MEMBERS[@]} " =~ " ${reviewer} " ]] && [[ " ${TEAM_B_MEMBERS[@]} " =~ " ${reviewer} " ]]; then
+            APPROVED=true
+            break
+          fi
+        done
+
+        if [[ "$APPROVED" == "true" ]]; then
+          echo "PR Approved by valid reviewers ✅"
+          echo "PR_APPROVED=true" >> $GITHUB_ENV
+        else
+          echo "PR not approved by required team members ❌"
+          exit 1
+        fi
+
+    - name: Proceed if PR Approved
+      if: env.PR_APPROVED == 'true'
+      run: |
+        echo "Running next job as PR has been approved by required members."
       
        
 
