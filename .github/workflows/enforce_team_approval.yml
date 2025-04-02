@@ -34,14 +34,36 @@ jobs:
         echo "TEAM_A=$Team_A" >> $GITHUB_ENV
         echo "TEAM_B=$Team_B" >> $GITHUB_ENV
 
+    - name: Fetch Team A Members
+      run: |
+        echo "Fetching Team A Members"
+        TEAM_A="teamahdfc"  # Make sure this is set to the correct Team ID
+
+        # Install jq for JSON parsing
+        sudo apt-get update && sudo apt-get install -y jq
+        
+        # API call to get team members
+        TEAM_A_MEMBERS=$(curl -s -H "Authorization: Bearer ${{ secrets.MY_TOKEN }}" \
+                          -H "Accept: application/vnd.github.v3+json" \
+                          "https://api.github.com/orgs/hdfcorg/teams/$TEAM_A/members")
+        
+         # Debugging: Print the raw response
+        echo "Raw API Response:"
+        echo "$TEAM_A_MEMBERS"
+    
+        # Ensure the response is a valid JSON array before using jq
+        if echo "$TEAM_B_MEMBERS" | jq empty 2>/dev/null; then
+          echo "Parsed Team B Members:"
+          echo "$TEAM_A_MEMBERS" | jq '.[] | {id, login, url}'
+        else
+          echo "Error: API did not return a valid JSON array"
+          exit 1
+        fi
     - name: Fetch Team B Members
       run: |
         echo "Fetching Team B Members"
         TEAM_B="teambsidgs"  # Make sure this is set to the correct Team ID
 
-        # Install jq for JSON parsing
-        sudo apt-get update && sudo apt-get install -y jq
-        
         # API call to get team members
         TEAM_B_MEMBERS=$(curl -s -H "Authorization: Bearer ${{ secrets.MY_TOKEN }}" \
                           -H "Accept: application/vnd.github.v3+json" \
@@ -58,11 +80,8 @@ jobs:
         else
           echo "Error: API did not return a valid JSON array"
           exit 1
-        fi
-
-        # # Parse and display team members
-        # echo "Response for Team B Members:"
-        # echo "$TEAM_B_MEMBERS" | jq '.[] | {id, slug, url}'  # This will extract the ID, login names, and URLs of the team members
+        fi    
         
-        # Optionally, output the whole response (uncomment the next line if needed):
-        # echo "$TEAM_B_MEMBERS"
+       
+
+        
