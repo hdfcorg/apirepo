@@ -23,16 +23,14 @@ jobs:
         echo "TEAM_A=$Team_A" >> $GITHUB_ENV
         echo "TEAM_B=$Team_B" >> $GITHUB_ENV
     - name: Fetch Team B Members
-      run: |
-        echo "Fetching Team B Members"
-        TEAM_B_MEMBERS=$(curl -s -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" -H "Accept: application/vnd.github.v3+json" "https://api.github.com/orgs/hdfcorg/teams/$TEAM_B/members")
-        echo "Response for Team B Members:"
-        echo "$TEAM_B_MEMBERS"
-        
-        # Only try to parse with jq if it looks like a JSON array
-        if [[ "$TEAM_B_MEMBERS" == \[* ]]; then
-          echo "Parsing team members data:"
-          echo "$TEAM_B_MEMBERS" | jq '.[] | {login, id}'
-        else
-          echo "API response is not a JSON array. Check the team name and token permissions."
-        fi
+        run: |
+          echo "Fetching Team B Members"
+          TEAM_B="your-team-id"  # Make sure this is set to the correct Team ID
+          TEAM_B_MEMBERS=$(curl -s -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" -H "Accept: application/vnd.github.v3+json" "https://api.github.com/orgs/hdfcorg/teams/$TEAM_B/members")
+          sudo apt-get install jq
+          # Optional: Parsing the JSON response to extract specific details, like the login names of the members
+          echo "Response for Team B Members:"
+          echo "$TEAM_B_MEMBERS" | jq '.[] | .login'  # This will extract the login names of the team members
+          
+         # If you just want to output the whole response, uncomment the next line:
+           echo "$TEAM_B_MEMBERS"
