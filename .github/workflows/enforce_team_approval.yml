@@ -1,10 +1,16 @@
 name: Fetch Team Members on PR Submission
 
+
 on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:  # Allows manual trigger
   pull_request:
     branches:
       - develop  # Trigger for PRs targeting the 'develop' branch
     types: [opened]  # Trigger only when the PR is opened
+    
 
 permissions:
   contents: read
