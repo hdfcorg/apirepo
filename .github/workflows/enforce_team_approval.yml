@@ -52,6 +52,14 @@ jobs:
               TEAM_B_APPROVED=1
             fi
           done
+           # Debugging Logs
+          echo "=== Debugging Info ==="
+          echo "Team A Members: ${TEAM_A_MEMBERS[@]}"
+          echo "Team B Members: ${TEAM_B_MEMBERS[@]}"
+          echo "Reviewers: $(echo '${{ steps.reviews.outputs.data }}' | jq -r '.[].user.login')"
+          echo "TEAM_A_APPROVED: $TEAM_A_APPROVED"
+          echo "TEAM_B_APPROVED: $TEAM_B_APPROVED"
+          echo "======================"
           if [[ $TEAM_A_APPROVED -eq 1 && $TEAM_B_APPROVED -eq 1 ]]; then
             echo "✅ Merge Allowed"
           else
