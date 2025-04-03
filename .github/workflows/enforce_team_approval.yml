@@ -1,129 +1,63 @@
-name: Fetch Team Members on PR Submission
-
-
+name: Enforce Team Approvals
+ 
 on:
-  push:
-    branches:
-      - develop
-  workflow_dispatch:  # Allows manual trigger
-  pull_request:
-    branches:
-      - develop  # Trigger for PRs targeting the 'develop' branch
-    types: [opened]  # Trigger only when the PR is opened
-    
-
-permissions:
-  contents: read
-  pull-requests: read
-
+  pull_request_review:
+    types: [submitted]
+ 
 jobs:
-  fetch_team_members:
+  check-approvals:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
-
-    - name: Define and use Team Names in one step
-      run: |
-        Team_Members=("teamahdfc" "teambsidgs")
-        Team_A="${Team_Members[0]}"
-        Team_B="${Team_Members[1]}"
-        echo "Team A: $Team_A"
-        echo "Team B: $Team_B"
-        echo "TEAM_A=$Team_A" >> $GITHUB_ENV
-        echo "TEAM_B=$Team_B" >> $GITHUB_ENV
-        
-        
-
-    - name: Fetch Team A Members
-      run: |
-        echo "Fetching Team A Members"
-        TEAM_A="teamahdfc"  # Make sure this is set to the correct Team ID
-
-        # Install jq for JSON parsing
-        sudo apt-get update && sudo apt-get install -y jq
-        
-        # API call to get team members
-        TEAM_A_MEMBERS=$(curl -s -H "Authorization: Bearer ${{ secrets.MY_TOKEN }}" \
-                          -H "Accept: application/vnd.github.v3+json" \
-                          "https://api.github.com/orgs/hdfcorg/teams/$TEAM_A/members")
-        
-         # Debugging: Print the raw response
-        echo "Raw API Response:"
-        echo "$TEAM_A_MEMBERS"
-    
-        # Ensure the response is a valid JSON array before using jq
-        if echo "$TEAM_B_MEMBERS" | jq empty 2>/dev/null; then
-          echo "Parsed Team B Members:"
-          echo "$TEAM_A_MEMBERS" | jq '.[] | {id, login, url}'
-        else
-          echo "Error: API did not return a valid JSON array"
-          exit 1
-        fi
-    - name: Fetch Team B Members
-      run: |
-        echo "Fetching Team B Members"
-        TEAM_B="teambsidgs"  # Make sure this is set to the correct Team ID
-
-        # API call to get team members
-        TEAM_B_MEMBERS=$(curl -s -H "Authorization: Bearer ${{ secrets.MY_TOKEN }}" \
-                          -H "Accept: application/vnd.github.v3+json" \
-                          "https://api.github.com/orgs/hdfcorg/teams/$TEAM_B/members")
-        
-         # Debugging: Print the raw response
-        echo "Raw API Response:"
-        echo "$TEAM_B_MEMBERS"
-    
-        # Ensure the response is a valid JSON array before using jq
-        if echo "$TEAM_B_MEMBERS" | jq empty 2>/dev/null; then
-          echo "Parsed Team B Members:"
-          echo "$TEAM_B_MEMBERS" | jq '.[] | {id, login, url}'
-        else
-          echo "Error: API did not return a valid JSON array"
-          exit 1
-        fi    
-    - name: Fetch PR Reviewers
-      run: |
-        echo "Fetching PR Reviewers"
-        
-        PR_NUMBER=${{ github.event.pull_request.number }}
-        echo "PR_NUMBER: $PR_NUMBER"
-        REPO=${{ github.repository }}
-        REVIEWERS=$(curl -s -H "Authorization: Bearer ${{ secrets.MY_TOKEN }}" \
-          -H "Accept: application/vnd.github.v3+json" \
-          "https://api.github.com/repos/$REPO/pulls/$PR_NUMBER/reviews" | jq -r '.[] | select(.state == "APPROVED") | .user.login' | sort -u)
-         echo "Response type: $(echo "$REVIEWERS" | jq 'type')"
-         echo "PR Reviewers: $REVIEWERS"
-         echo "API Response:"
-         echo "$REVIEWERS" | jq '.'
-         
-        if [ -z "$REVIEWERS" ]; then
-           echo "No reviewers found for this PR."
-          exit 1
-         fi
-
-        
-
-        # Validate PR approval
-        APPROVED=false
-        for reviewer in $REVIEWERS; do
-          if [[ " ${TEAM_A_MEMBERS[@]} " =~ " ${reviewer} " ]] && [[ " ${TEAM_B_MEMBERS[@]} " =~ " ${reviewer} " ]]; then
-            APPROVED=true
-            break
+      - name: Fetch PR reviews
+        id: reviews
+        uses: octokit/request-action@v2.x
+        with:
+          route: GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        params:
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+          pull_number: ${{ github.event.pull_request.number }}
+ 
+      - name: Fetch Team A Members
+        id: team_a
+        uses: octokit/request-action@v2.x
+        with:
+          route: GET /orgs/{org}/teams/teamahdfc/members
+        env:
+          GITHUB_TOKEN: ${{ secrets.MY_TOKEN }}
+        params:
+          org: ${{ github.repository_owner }}
+ 
+      - name: Fetch Team B Members
+        id: team_b
+        uses: octokit/request-action@v2.x
+        with:
+          route: GET /orgs/{org}/teams/teambsidgs/members
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        params:
+          org: ${{ github.repository_owner }}
+ 
+      - name: Validate Approvals
+        run: |
+          TEAM_A_MEMBERS=($(echo '${{ steps.team_a.outputs.data }}' | jq -r '.[].login'))
+          TEAM_B_MEMBERS=($(echo '${{ steps.team_b.outputs.data }}' | jq -r '.[].login'))
+          TEAM_A_APPROVED=0
+          TEAM_B_APPROVED=0
+ 
+          for reviewer in $(echo '${{ steps.reviews.outputs.data }}' | jq -r '.[].user.login'); do
+            if [[ " ${TEAM_A_MEMBERS[@]} " =~ " ${reviewer} " ]]; then
+              TEAM_A_APPROVED=1
+            fi
+            if [[ " ${TEAM_B_MEMBERS[@]} " =~ " ${reviewer} " ]]; then
+              TEAM_B_APPROVED=1
+            fi
+          done
+          if [[ $TEAM_A_APPROVED -eq 1 && $TEAM_B_APPROVED -eq 1 ]]; then
+            echo "✅ Merge Allowed"
+          else
+            echo "❌ One approval from each team is required!"
+            exit 1
           fi
-        done
-
-        if [[ "$APPROVED" == "true" ]]; then
-          echo "PR Approved by valid reviewers ✅"
-          echo "PR_APPROVED=true" >> $GITHUB_ENV
-        else
-          echo "PR not approved by required team members ❌"
-          exit 1
-        fi
-
-    
-      
-       
-
-        
