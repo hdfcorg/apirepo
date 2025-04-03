@@ -87,7 +87,7 @@ jobs:
       run: |
         echo "Fetching PR Reviewers"
         
-        PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+        PR_NUMBER=${{ github.event.pull_request.number }}
         echo "PR_NUMBER: $PR_NUMBER"
         REPO=${{ github.repository }}
         REVIEWERS=$(curl -s -H "Authorization: Bearer ${{ secrets.MY_TOKEN }}" \
