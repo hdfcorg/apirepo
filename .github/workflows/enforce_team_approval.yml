@@ -90,16 +90,18 @@ jobs:
         PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
         echo "PR_NUMBER: $PR_NUMBER"
         REPO=${{ github.repository }}
-
-        REVIEWERS=$(curl -s -H "Authorization: Bearer ${{ secrets.MY_TOKEN }}" \
+        REVIEWERS=$(curl -s -H "Authorization: Bearer ${MY_TOKEN}" \
           -H "Accept: application/vnd.github.v3+json" \
-          "https://api.github.com/repos/$REPO/pulls/$PR_NUMBER/reviews" | jq -r '.[] | select(.state=="APPROVED") | .user.login' | sort -u)
+          "https://api.github.com/repos/$REPO/pulls/$PR_NUMBER/reviews" | jq -r '.[] | select(.state == "APPROVED") | .user.login' | sort -u)
 
         echo "PR Reviewers: $REVIEWERS"
+
         if [ -z "$REVIEWERS" ]; then
-          echo "No reviewers found for this PR."
+           echo "No reviewers found for this PR."
           exit 1
-        fi
+         fi
+
+        
 
         # Validate PR approval
         APPROVED=false
