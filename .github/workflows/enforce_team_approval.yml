@@ -92,7 +92,7 @@ jobs:
         REPO=${{ github.repository }}
         REVIEWERS=$(curl -s -H "Authorization: Bearer ${{ secrets.MY_TOKEN }}" \
           -H "Accept: application/vnd.github.v3+json" \
-          "https://api.github.com/repos/apirepo/pulls/$PR_NUMBER/reviews" | jq -r '.[] | select(.state == "APPROVED") | .user.login' | sort -u)
+          "https://api.github.com/repos/$REPO/pulls/$PR_NUMBER/reviews" | jq -r '.[] | select(.state == "APPROVED") | .user.login' | sort -u)
          echo "Response type: $(echo "$REVIEWERS" | jq 'type')"
          echo "PR Reviewers: $REVIEWERS"
          echo "API Response:"
