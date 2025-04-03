@@ -34,7 +34,7 @@ jobs:
         with:
           route: GET /orgs/${{ github.repository_owner }}/teams/teambsidgs/members
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.MY_TOKEN }}
  
       - name: Validate Approvals
         run: |
