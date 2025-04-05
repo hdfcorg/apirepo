@@ -8,27 +8,31 @@ jobs:
   check-approvals:
     runs-on: ubuntu-latest
     steps:
+      - name: Fetch PR number
+        id: get_pr_number
+        run: echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+ 
       - name: Fetch PR reviews
         id: reviews
         uses: octokit/request-action@v2.x
         with:
-          route: GET /repos/${{ github.repository.owner.login }}/${{ github.repository.name }}/pulls/${{ github.event.pull_request.number }}/reviews
+          route: GET /repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/pulls/${{ env.PR_NUMBER }}/reviews
         env:
           GITHUB_TOKEN: ${{ secrets.MY_TOKEN }}
  
       - name: Fetch Team A Members
-        id: team_a
+        id: teamahdfc
         uses: octokit/request-action@v2.x
         with:
-          route: GET /orgs/${{ github.repository_owner }}/teams/teamahdfc/members
+          route: GET /orgs/${{ github.repository_owner }}/teams/teama/members
         env:
           GITHUB_TOKEN: ${{ secrets.MY_TOKEN }}
  
       - name: Fetch Team B Members
-        id: team_b
+        id: teambsidgs
         uses: octokit/request-action@v2.x
         with:
-          route: GET /orgs/${{ github.repository_owner }}/teams/teambsidgs/members
+          route: GET /orgs/${{ github.repository_owner }}/teams/teamb/members
         env:
           GITHUB_TOKEN: ${{ secrets.MY_TOKEN }}
  
@@ -48,7 +52,6 @@ jobs:
               TEAM_B_APPROVED=1
             fi
           done
-          
           if [[ $TEAM_A_APPROVED -eq 1 && $TEAM_B_APPROVED -eq 1 ]]; then
             echo "✅ Merge Allowed"
           else
