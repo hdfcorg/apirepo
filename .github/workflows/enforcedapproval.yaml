@@ -8,18 +8,13 @@ jobs:
   check-approvals:
     runs-on: ubuntu-latest
     steps:
-      - name: Set PR route as environment variable
-        run: |
-          echo "PR_ROUTE=GET /repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/pulls/${{ github.event.pull_request.number }}/reviews" >> $GITHUB_ENV
-      
       - name: Fetch PR reviews
         id: reviews
         uses: octokit/request-action@v2.x
         with:
-          route: ${{ env.PR_ROUTE }}
+          route: GET /repos/${{ github.repository.owner.login }}/${{ github.repository.name }}/pulls/${{ github.event.pull_request.number }}/reviews
         env:
           GITHUB_TOKEN: ${{ secrets.MY_TOKEN }}
-
  
       - name: Fetch Team A Members
         id: team_a
