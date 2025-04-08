@@ -17,7 +17,7 @@ jobs:
         with:
           route: GET /orgs/${{ github.repository_owner }}/teams/teamahdfc/members
         env:
-          GITHUB_TOKEN: ${{ secrets.MY_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.ORG_MY_TOKEN }}
 
       - name: Fetch Team B Members
         id: team_b
@@ -25,7 +25,7 @@ jobs:
         with:
           route: GET /orgs/${{ github.repository_owner }}/teams/teambsidgs/members
         env:
-          GITHUB_TOKEN: ${{ secrets.MY_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.ORG_MY_TOKEN }}
 
       - name: Fetch PR Reviews
         id: reviews
@@ -33,7 +33,7 @@ jobs:
         with:
           route: GET /repos/${{ github.repository_owner }}/${{ github.event.pull_request.head.repo.name }}/pulls/${{ github.event.pull_request.number }}/reviews
         env:
-          GITHUB_TOKEN: ${{ secrets.MY_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.ORG_MY_TOKEN }}
 
       - name: Validate Approvals
         run: |
